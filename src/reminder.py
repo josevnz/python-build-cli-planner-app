@@ -10,7 +10,7 @@ class PrefixedReminder:
 
 class PoliteReminder(PrefixedReminder):
 
-    def __init__(self, text: str, _: str = None):
+    def __init__(self, text: str, date: str = None):
         super().__init__(f"Please")
         self.text = f"{self.prefix}{text}"
 
