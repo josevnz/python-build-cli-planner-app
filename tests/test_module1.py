@@ -14,8 +14,10 @@ from pathlib import Path
 import app
 from src import database
 from src import reminder
+
 try:
     from src import deadlined_reminders as dr
+
     DEADLINED_REMINDERS_IMPORTED = True
 except ImportError:
     dr = None
@@ -26,6 +28,7 @@ from src.external_reminders import EveningReminder
 # This is for generality of task of implementation the concrete class
 CONCRETE_CLASS_NAME = 'DateReminder'
 ABSTRACT_METHOD_NAME = 'is_due'
+
 
 class DummyReminder:
     def __init__(self, *args, **kwargs):
@@ -67,8 +70,9 @@ def test_task_1_regular_class_implementation():
     polite_reminder = reminder.PoliteReminder('test_string')
     assert hasattr(polite_reminder, 'prefix'), \
         'No `prefix` property on `PoliteReminder`. Did you inherit from `PrefixedReminder`?'
-    assert 'please' in polite_reminder.prefix.lower(),\
+    assert 'please' in polite_reminder.prefix.lower(), \
         '`PoliteReminder` should initiate its parent [super()] with a polite prefix containing "please"'
+
 
 # === TASK 2 ========================================================================
 
@@ -77,10 +81,11 @@ def test_task_2_overriding_text():
     test_task_1_regular_class_implementation()
 
     polite_reminder = reminder.PoliteReminder('test_string')
-    assert polite_reminder.text != polite_reminder.prefix + '<placeholder_text>',\
+    assert polite_reminder.text != polite_reminder.prefix + '<placeholder_text>', \
         'You should override the `text` property with the concatenation'
-    assert polite_reminder.text == polite_reminder.prefix + 'test_string',\
+    assert polite_reminder.text == polite_reminder.prefix + 'test_string', \
         '`PoliteReminder` should prefix the passed string with your prefix'
+
 
 # === TASK 3-4 ======================================================================
 
@@ -102,13 +107,13 @@ def test_task_3_DeadlinedMetaReminder():
     assert issubclass(cls, Iterable), f'{class_name} should inherit from `collections.abc.Iterable`'
 
     # --- CHECK METHOD ----------------------------
-    assert hasattr(cls, ABSTRACT_METHOD_NAME),\
-         f'Could not find `{ABSTRACT_METHOD_NAME}` in `{class_name}`'
-    assert ABSTRACT_METHOD_NAME in cls.__abstractmethods__,\
+    assert hasattr(cls, ABSTRACT_METHOD_NAME), \
+        f'Could not find `{ABSTRACT_METHOD_NAME}` in `{class_name}`'
+    assert ABSTRACT_METHOD_NAME in cls.__abstractmethods__, \
         f'Method {ABSTRACT_METHOD_NAME} is not abstract in class {class_name}'
 
     params = inspect.signature(cls.is_due).parameters
-    assert 'self' in params,\
+    assert 'self' in params, \
         f'`{ABSTRACT_METHOD_NAME}()` should be a method. Did you forget `self`?'
 
 
@@ -131,13 +136,13 @@ def test_task_4_DeadlinedReminder():
     assert ABC in cls.__mro__, 'Class `DeadlinedReminder` should inherit from `ABC`'
 
     # --- CHECK METHOD ----------------------------
-    assert hasattr(cls, ABSTRACT_METHOD_NAME),\
-         f'Could not find `{ABSTRACT_METHOD_NAME}` in `{class_name}`'
-    assert ABSTRACT_METHOD_NAME in cls.__abstractmethods__,\
+    assert hasattr(cls, ABSTRACT_METHOD_NAME), \
+        f'Could not find `{ABSTRACT_METHOD_NAME}` in `{class_name}`'
+    assert ABSTRACT_METHOD_NAME in cls.__abstractmethods__, \
         f'Method {ABSTRACT_METHOD_NAME} is not abstract in class {class_name}'
 
     params = inspect.signature(cls.is_due).parameters
-    assert 'self' in params,\
+    assert 'self' in params, \
         f'`{ABSTRACT_METHOD_NAME}()` should be a method. Did you forget `self`?'
 
 
@@ -158,23 +163,24 @@ def test_task_5_concrete_subclass_stub():
 
     implemented_fcts = inspect.getmembers(cls, inspect.isfunction)
     implemented_fct_names = [name for name, fct in implemented_fcts]
-    assert '__init__' in implemented_fct_names,\
+    assert '__init__' in implemented_fct_names, \
         f'You should implement `__init__` on {CONCRETE_CLASS_NAME}'
 
     init_params = inspect.signature(cls.__init__).parameters
-    assert 'text' in init_params,\
+    assert 'text' in init_params, \
         f'`{CONCRETE_CLASS_NAME}.__init__()` should receive `text` as a parameter'
-    assert 'date' in init_params,\
+    assert 'date' in init_params, \
         f'`{CONCRETE_CLASS_NAME}.__init__()` should receive `date` as a parameter'
 
     class DateReminder(cls):
         def __iter__(self): pass
+
         def is_due(self): pass
 
     reminder = DateReminder('test_string', '01/01/2020')
-    assert reminder.text == 'test_string',\
+    assert reminder.text == 'test_string', \
         f'Incorrect text set in {CONCRETE_CLASS_NAME}.__init__()'
-    assert reminder.date == parse('01/01/2020'),\
+    assert reminder.date == parse('01/01/2020'), \
         f'Incorrect date set in {CONCRETE_CLASS_NAME}.__init__(). Did you `parse()` it?'
 
 
@@ -185,7 +191,7 @@ def test_task_6_is_due():
     method_name = 'is_due'
 
     cls = getattr(dr, CONCRETE_CLASS_NAME)
-    assert method_name not in cls.__abstractmethods__,\
+    assert method_name not in cls.__abstractmethods__, \
         f'You should implement `{method_name}()` on {CONCRETE_CLASS_NAME}'
 
     class DateReminder(cls):
@@ -196,17 +202,17 @@ def test_task_6_is_due():
     date = datetime.now() + timedelta(days=offset)
     reminder = DateReminder('test_string', f'{date:%d/%m/%Y}')
     method = getattr(reminder, method_name)
-    assert inspect.ismethod(method),\
+    assert inspect.ismethod(method), \
         f'`{method_name}()` is not a method on {CONCRETE_CLASS_NAME}. Did you forget `self` ?'
 
     passed_date = datetime.now() - timedelta(days=offset)
     passed_reminder = DateReminder('test_string', f'{passed_date:%d/%m/%Y}')
-    assert passed_reminder.is_due() is True,\
+    assert passed_reminder.is_due() is True, \
         f'`{CONCRETE_CLASS_NAME}.is_due()` should return True for a past date'
 
     future_date = datetime.now() + timedelta(days=offset)
     future_reminder = DateReminder('test_string', f'{future_date:%d/%m/%Y}')
-    assert future_reminder.is_due() is False,\
+    assert future_reminder.is_due() is False, \
         f'`{CONCRETE_CLASS_NAME}.is_due()` should return False for a future date ({future_date:%d/%m/%Y})'
 
 
@@ -217,11 +223,11 @@ def test_task_7_iter():
     method_name = '__iter__'
 
     cls = getattr(dr, CONCRETE_CLASS_NAME)
-    assert method_name not in cls.__abstractmethods__,\
+    assert method_name not in cls.__abstractmethods__, \
         f'You should implement `{method_name}()` on {CONCRETE_CLASS_NAME}'
 
     # at this point we no longer need to mock it, we should be able to instantiate directly
-    assert not cls.__abstractmethods__,\
+    assert not cls.__abstractmethods__, \
         f'{CONCRETE_CLASS_NAME} should implement all virtual methods'
     DateReminder = cls
 
@@ -232,17 +238,17 @@ def test_task_7_iter():
 
     reminder = DateReminder('test_string', date_str)
     method = getattr(reminder, method_name)
-    assert inspect.ismethod(method),\
+    assert inspect.ismethod(method), \
         f'`{method_name}()` is not a method on {CONCRETE_CLASS_NAME}. Did you forget `self` ?'
 
     serialized_reminder = list(reminder)
-    assert len(serialized_reminder) == 2,\
+    assert len(serialized_reminder) == 2, \
         f'{CONCRETE_CLASS_NAME} should be serialized into an iterable of 2 elements'
 
-    assert serialized_reminder[0] == 'test_string',\
+    assert serialized_reminder[0] == 'test_string', \
         f'First element of your serialized {CONCRETE_CLASS_NAME} should be its `text`.'
 
-    assert serialized_reminder[1] == formatted_date,\
+    assert serialized_reminder[1] == formatted_date, \
         f'Second element of your serialized {CONCRETE_CLASS_NAME} should be _formatted_ date.'
 
 
@@ -251,14 +257,14 @@ def test_task_7_iter():
 @pytest.mark.test_task_8_update_interface
 def test_task_8_update_interface(backup_reminders_csv):
     add_reminder_params = inspect.signature(database.add_reminder).parameters
-    assert len(add_reminder_params) >= 2,\
+    assert len(add_reminder_params) >= 2, \
         '`database.add_reminder()` should take two parameters'
 
-    assert 'text' == list(add_reminder_params)[0],\
+    assert 'text' == list(add_reminder_params)[0], \
         '`database.add_reminder() should still take the `text` as first parameter'
-    assert 'date' == list(add_reminder_params)[1],\
+    assert 'date' == list(add_reminder_params)[1], \
         '`database.add_reminder() should take the `date` as second parameter'
-    assert add_reminder_params['date'].default is inspect.Parameter.empty,\
+    assert add_reminder_params['date'].default is inspect.Parameter.empty, \
         '`date` should not have a default value in `database.add_reminder()`'
 
     if len(add_reminder_params) > 2:
@@ -277,10 +283,11 @@ def test_task_8_update_interface(backup_reminders_csv):
         except StopIteration:
             pytest.fail('database.add_reminder() had no effect')
         else:
-            assert row[0] == 'test_string',\
+            assert row[0] == 'test_string', \
                 'database.add_reminder() did not serialize text correctly. Check your DateReminder text'
-            assert row[1] == '2020-02-01T00:00:00',\
+            assert row[1] == '2020-02-01T00:00:00', \
                 'database.add_reminder() did not serialize date correctly. Check your DateReminder date'
+
 
 # === TASK 9 ========================================================================
 
@@ -290,20 +297,20 @@ def test_task_9_accept_class(backup_reminders_csv):
     test_task_7_iter()
 
     # --- correct_imports ---------------------------------------------
-    assert not hasattr(database, 'PoliteReminder'),\
+    assert not hasattr(database, 'PoliteReminder'), \
         'You should no longer import `PoliteReminder` in `database`'
-    assert not hasattr(database, 'DateReminder'),\
+    assert not hasattr(database, 'DateReminder'), \
         'You should no longer import `DateReminder` in `database`'
 
-    assert hasattr(database, 'DeadlinedReminder'),\
+    assert hasattr(database, 'DeadlinedReminder'), \
         'You should import `DeadlinedReminder` in `database`'
 
     # --- add_reminder_third_parameter --------------------------------
     signature = inspect.signature(database.add_reminder)
     params = list(signature.parameters)
-    assert len(params) == 3,\
+    assert len(params) == 3, \
         'You should pass a third parameter to `add_reminder`'
-    assert params[2] == 'ReminderClass',\
+    assert params[2] == 'ReminderClass', \
         'The third parameter should be `ReminderClass`'
 
     # --- add_reminder_date -------------------------------------------
@@ -312,7 +319,7 @@ def test_task_9_accept_class(backup_reminders_csv):
     # --- add_reminder_incorrect --------------------------------------
     # NOTE: pytest.raises(TypeError) does not work here as we want custom message
     #       for the other exceptions, which would bubble up otherwise
-    error_message = 'You should only allow conforming classes in `add_reminder`.'\
+    error_message = 'You should only allow conforming classes in `add_reminder`.' \
                     ' Did you forget `issubclass()`?'
     try:
         database.add_reminder('test_reminder', '1/1/2020', DummyReminder)
@@ -322,6 +329,7 @@ def test_task_9_accept_class(backup_reminders_csv):
     except Exception:
         pytest.fail(error_message)
 
+
 # === TASK 10 ========================================================================
 
 @pytest.mark.test_task_10_subclasshook
@@ -329,24 +337,24 @@ def test_task_10_subclasshook(backup_reminders_csv):
     test_task_4_DeadlinedReminder()
 
     DeadlinedReminder = dr.DeadlinedReminder
-    assert '__subclasshook__' in DeadlinedReminder.__dict__,\
+    assert '__subclasshook__' in DeadlinedReminder.__dict__, \
         'Could not find `__subclasshook__` onto `DeadlinedReminder`'
 
     # NOTE: we should not getattr, as that one is bound *to the class* and the check fails
     hook = DeadlinedReminder.__dict__['__subclasshook__']
-    assert isinstance(hook, classmethod),\
+    assert isinstance(hook, classmethod), \
         '`__subclasshook__` should be a classmethod'
 
-    assert issubclass(EveningReminder, DeadlinedReminder),\
-        '`__subclasshook__` gives wrong result for class that'\
-            ' respects the protocol of `DeadlinedReminder`'
+    assert issubclass(EveningReminder, DeadlinedReminder), \
+        '`__subclasshook__` gives wrong result for class that' \
+        ' respects the protocol of `DeadlinedReminder`'
 
-    assert not issubclass(DummyReminder, DeadlinedReminder),\
-        '`__subclasshook__` gives wrong result for class that '\
-            ' does not respect the protocol of `DeadlinedReminder`'
+    assert not issubclass(DummyReminder, DeadlinedReminder), \
+        '`__subclasshook__` gives wrong result for class that ' \
+        ' does not respect the protocol of `DeadlinedReminder`'
 
     # --- task_10_add_reminder_evening ---------------------------------
-    assert hasattr(app, 'EveningReminder'),\
+    assert hasattr(app, 'EveningReminder'), \
         'You did not import/use `EveningReminder` in `app.py`'
 
     try:
@@ -354,13 +362,14 @@ def test_task_10_subclasshook(backup_reminders_csv):
     except Exception as exc:
         pytest.fail('Could not pass an `EveningReminder` to `add_reminder`')
 
+
 # === TASK 11 ========================================================================
 
 @pytest.mark.test_task_11_add_reminder_isinstance
 def test_task_11_add_reminder_isinstance():
     code_lines, starts_on = inspect.getsourcelines(database.add_reminder)
     EXISTS_LINE_WITH_issubclass = any('issubclass' in line for line in code_lines)
-    assert not EXISTS_LINE_WITH_issubclass,\
+    assert not EXISTS_LINE_WITH_issubclass, \
         'You should remove the `issubclass` check'
 
     IDX_LINE_WITH_isinstance = None
@@ -373,15 +382,16 @@ def test_task_11_add_reminder_isinstance():
     for idx, line in enumerate(code_lines):
         if re.findall(r'isinstance\(.*\)', line):
             IDX_LINE_WITH_isinstance = idx
-            assert 'ReminderClass' not in line,\
+            assert 'ReminderClass' not in line, \
                 'You should call `isinstance` with the instance, not the class'
             break
 
-    assert IDX_LINE_WITH_isinstance is not None,\
+    assert IDX_LINE_WITH_isinstance is not None, \
         'You should add a check for `isinstance`'
     assert IDX_LINE_WITH_constructor is not None \
-           and IDX_LINE_WITH_constructor < IDX_LINE_WITH_isinstance,\
+           and IDX_LINE_WITH_constructor < IDX_LINE_WITH_isinstance, \
         'You should construct the `reminder` before checking `isinstance()`'
+
 
 # === TASK 12 ========================================================================
 
@@ -390,30 +400,30 @@ def test_task_12_register_polite_reminder():
     test_task_1_regular_class_implementation()
 
     PoliteReminder = reminder.PoliteReminder
-    assert hasattr(PoliteReminder, '__iter__'),\
+    assert hasattr(PoliteReminder, '__iter__'), \
         'You should add `__iter__` on PoliteReminder'
 
     init_params = inspect.signature(PoliteReminder.__init__).parameters
-    assert init_params.keys() == {'self', 'text', 'date'},\
+    assert init_params.keys() == {'self', 'text', 'date'}, \
         'In the last task PoliteReminder.__init__() should also take `date` parameter'
 
-    assert init_params['date'].default is None,\
+    assert init_params['date'].default is None, \
         'The `date` parameter of PoliteReminder.__init__() should be `None`'
 
     pr = PoliteReminder('test', '1/1/2020')
     polite_reminder_iter = list(pr.__iter__())
-    assert polite_reminder_iter[0] == pr.text,\
+    assert polite_reminder_iter[0] == pr.text, \
         '`PoliteReminder.__iter__()` should return the `text` as first element'
 
-    assert len(polite_reminder_iter) == 1,\
+    assert len(polite_reminder_iter) == 1, \
         '`PoliteReminder.__iter__()` should return only one item in the list'
 
     # --- task_12_registration ------------------------------------------
-    assert hasattr(app, 'PoliteReminder'),\
+    assert hasattr(app, 'PoliteReminder'), \
         'You should import `PoliteReminder` in `app.py`'
 
-    assert hasattr(app, 'DeadlinedReminder'),\
+    assert hasattr(app, 'DeadlinedReminder'), \
         'You should import `DeadlinedReminder` in `app.py`'
 
-    assert issubclass(reminder.PoliteReminder, dr.DeadlinedReminder),\
+    assert issubclass(reminder.PoliteReminder, dr.DeadlinedReminder), \
         'You should register `PoliteReminder` with `DeadlinedReminder`'
