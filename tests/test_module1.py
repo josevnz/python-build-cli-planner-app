@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 import inspect
 import re
@@ -53,7 +55,11 @@ def backup_reminders_csv():
     if src_existed:
         shutil.move(dst_path, src_path)
     else:
-        src_path.unlink()
+        try:
+            src_path.unlink()
+        except FileNotFoundError as fne:
+            print(f"Could not find {src_path}, ignoring delete"
+                  f" error: {fne}", file=sys.stderr)
 
 
 # === TASK 1 ========================================================================
